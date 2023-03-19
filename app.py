@@ -4,7 +4,7 @@ import pandas as pd
 import altair as alt
 
 # Load dataset
-df = pd.read_csv("data/cleaned_dataset.csv")
+df = pd.read_csv("data/cleaned_dataset.csv", index_col=0)
 
 
 app = dash.Dash(__name__)
@@ -20,7 +20,7 @@ app.layout = html.Div(
                             options=[
                                 {"label": row, "value": row} for row in df["Food name"]
                             ],
-                            placeholder="Select a Food",
+                            value="Deli meat, chicken breast, low fat",
                         )
                     ],
                     style={"width": "50%"},
@@ -29,7 +29,9 @@ app.layout = html.Div(
                     id="multiplier-input1",
                     type="number",
                     placeholder="Weight (Grams)",
+                    value=100,
                 ),
+                dcc.Markdown("grams"),
             ],
             style={"display": "flex", "width": "100%"},
         ),
@@ -42,7 +44,7 @@ app.layout = html.Div(
                             options=[
                                 {"label": row, "value": row} for row in df["Food name"]
                             ],
-                            placeholder="Select a Food",
+                            value="Bread, rye",
                         )
                     ],
                     style={"width": "50%"},
@@ -51,7 +53,9 @@ app.layout = html.Div(
                     id="multiplier-input2",
                     type="number",
                     placeholder="Weight (Grams)",
+                    value=150,
                 ),
+                dcc.Markdown("grams"),
             ],
             style={"display": "flex", "width": "100%"},
         ),
@@ -64,7 +68,7 @@ app.layout = html.Div(
                             options=[
                                 {"label": row, "value": row} for row in df["Food name"]
                             ],
-                            placeholder="Select a Food",
+                            value="Mustard",
                         )
                     ],
                     style={"width": "50%"},
@@ -73,7 +77,9 @@ app.layout = html.Div(
                     id="multiplier-input3",
                     type="number",
                     placeholder="Weight (Grams)",
+                    value=20,
                 ),
+                dcc.Markdown("grams"),
             ],
             style={"display": "flex", "width": "100%"},
         ),
@@ -86,7 +92,7 @@ app.layout = html.Div(
                             options=[
                                 {"label": row, "value": row} for row in df["Food name"]
                             ],
-                            placeholder="Select a Food",
+                            value="Ketchup",
                         )
                     ],
                     style={"width": "50%"},
@@ -95,7 +101,9 @@ app.layout = html.Div(
                     id="multiplier-input4",
                     type="number",
                     placeholder="Weight (Grams)",
+                    value=20,
                 ),
+                dcc.Markdown("grams"),
             ],
             style={"display": "flex", "width": "100%"},
         ),
@@ -108,7 +116,7 @@ app.layout = html.Div(
                             options=[
                                 {"label": row, "value": row} for row in df["Food name"]
                             ],
-                            placeholder="Select a Food",
+                            value="Pickles, cucumber, dill",
                         )
                     ],
                     style={"width": "50%"},
@@ -117,11 +125,13 @@ app.layout = html.Div(
                     id="multiplier-input5",
                     type="number",
                     placeholder="Weight (Grams)",
+                    value=30,
                 ),
+                dcc.Markdown("grams"),
             ],
             style={"display": "flex", "width": "100%"},
         ),
-        dcc.Graph(id="bar-chart"),
+        html.Iframe(id="bar-chart", width="100%", height="500px"),
         html.H3("Sums"),
         dash_table.DataTable(id="table"),
     ]
@@ -129,7 +139,7 @@ app.layout = html.Div(
 
 
 @app.callback(
-    Output("bar-chart", "figure"),
+    Output("bar-chart", "srcDoc"),
     Output("table", "data"),
     Input("row-dropdown1", "value"),
     Input("row-dropdown2", "value"),
@@ -145,29 +155,27 @@ app.layout = html.Div(
 def update_table_plot(
     drop1, drop2, drop3, drop4, drop5, weight1, weight2, weight3, weight4, weight5
 ):
-    filtered_df = pd.DataFrame()
-    for input in [
-        (drop1, weight1),
-        (drop2, weight2),
-        (drop3, weight3),
-        (drop4, weight4),
-        (drop5, weight5),
-    ]:
-        row = df["Food name"].loc[input[0]]
-        row = row / df["Food name"].loc[input[0], "Weight"] * input[1]
+    filtered_df = pd.DataFrame(columns=["Protein", "Carbohydrate", "Total Fat"])
+    for name, weight in zip(
+        [drop1, drop2, drop3, drop4, drop5],
+        [weight1, weight2, weight3, weight4, weight5],
+    ):
+
+        row = df[df["Food name"] == name]
+        row = row[["Protein", "Carbohydrate", "Total Fat"]]
+        row = row / df[df["Food name"] == name].iloc[0]["Weight"] * weight
         filtered_df = filtered_df.append(row)
 
-    filtered_df = filtered_df[["Protein", "Carbohydrate", "Total Fat", "Energy"]]
-    sums = filtered_df.sum()
+    sums = pd.DataFrame(filtered_df.sum()).T
+    melted_sums = sums.melt(var_name="Nutrient")
+
     chart = (
-        alt.Chart(sums.reset_index())
-        .mark_bar()
-        .encode(
-            x="index",
-            y="sum",
-        )
+        alt.Chart(melted_sums).mark_bar().encode(x="column", y="value", color="column")
     )
-    return chart.to_html(), sums
+
+    data = sums.round(1).to_dict("records")
+
+    return chart.to_html(), data
 
 
 if __name__ == "__main__":
