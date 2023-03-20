@@ -1,5 +1,5 @@
 # MacroMatch
-An extension of the [MacroView Shiny app](https://macroview.shinyapps.io/MacroView/), designed to compare specific recipes. Built with Dash.
+An extension of the [MacroView Shiny app](https://github.com/samson-bakos/MacroView), designed to visualize specific recipes. Built with Dash.
 
 This app shares a user persona profile/ project background with its parent app, MacroView. Please find the original proposal for the MacroView App [here](https://github.com/UBC-MDS/MacroView/blob/main/reports/proposal.md)
 
