@@ -9,6 +9,7 @@ df = pd.read_csv("data/cleaned_dataset.csv", index_col=0)
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.SANDSTONE])
+server = app.server
 app.layout = html.Div(
     [
         html.H1("MacroMatch"),
