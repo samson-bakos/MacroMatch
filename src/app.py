@@ -5,7 +5,7 @@ import altair as alt
 import dash_bootstrap_components as dbc
 
 # Load dataset
-df = pd.read_csv("data/cleaned_dataset.csv", index_col=0)
+df = pd.read_csv("../data/cleaned_dataset.csv", index_col=0)
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.SANDSTONE])
